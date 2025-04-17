@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -15,25 +16,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: '*', // Later we'll update this to your specific frontend domain
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// API Routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
-  });
-}
+// Basic route for testing
+app.get('/', (req, res) => {
+  res.json({ message: 'Task Manager API is running' });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -41,7 +42,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Server error',
-    error: process.env.NODE_ENV === 'production' ? {} : err
+    error: err.message
   });
 });
 
